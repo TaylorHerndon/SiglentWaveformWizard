@@ -39,6 +39,6 @@
         </DockPanel>
         <Separator DockPanel.Dock="Top"/>
         <Button x:Name="PingButton" HorizontalAlignment="Left" Margin="8,4" Click="PingButton_Click" Content="Ping"/>
-        <Button x:Name="ResetButton" HorizontalAlignment="Left" Margin="8,4" Click="ResetButton_Click" Content="OpComplete"/>
+        <Button x:Name="FuncButton" HorizontalAlignment="Left" Margin="8,4" Click="FuncButton_Click" Content="Func"/>
     </DockPanel>
 </Window>

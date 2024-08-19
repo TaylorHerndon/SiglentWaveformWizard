@@ -15,6 +15,7 @@ using HandyControl.Themes;
 using HandyControl.Tools;
 using HandyControl.Data;
 using SiglentWaveformWizard.Communications;
+using SiglentWaveformWizard.Resources;
 
 namespace SiglentWaveformWizard
 {
@@ -64,10 +65,10 @@ namespace SiglentWaveformWizard
             if (response != null) { MessageBox.Show(response); }
         }
 
-        private void ResetButton_Click(object sender, RoutedEventArgs e)
+        private void FuncButton_Click(object sender, RoutedEventArgs e)
         {
-            string? response = waveformGen?.WaitUntilOperationComplete();
-            if (response != null) { MessageBox.Show(response); }
+            string? response = waveformGen?.Channels[0].OutputState;
+            if (response != null) { Common.InfoPopup(response); }
         }
     }
 }

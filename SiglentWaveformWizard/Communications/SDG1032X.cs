@@ -23,8 +23,7 @@ namespace SiglentWaveformWizard.Communications
         public string Manufacturer { get; private set; }
         public string ModelNumber { get; private set; }
         public string SerialNumber { get; private set; }
-        
-        //public List<OutputChannel> Channels { get; private set; }
+        public List<OutputChannel> Channels { get; private set; }
 
         public SDG1032X(string ip, int port)
         {
@@ -40,6 +39,11 @@ namespace SiglentWaveformWizard.Communications
             ModelNumber = idParts[1];
             SerialNumber = idParts[2];
             if (ModelNumber != "SDG1032X") { throw new Exception("Invalid device model number."); }
+
+            Channels = new List<OutputChannel>() { 
+                new OutputChannel("C1", device),
+                new OutputChannel("C2", device)
+            };
         }
 
         public string? IDN() => device.IDN();
@@ -51,10 +55,31 @@ namespace SiglentWaveformWizard.Communications
         public class OutputChannel
         {
             public string Name { get; private set; }
+            private ScpiDevice Device;
+            public OutputChannel(string channelName, ScpiDevice device) 
+            { 
+                this.Name = channelName; 
+                this.Device = device;
+            }
 
-            public OutputChannel(string channelName)
+            /// <summary>
+            /// Wrapper function for ScpiDevice Query.
+            /// Will add channel as root of query message if it is not there already.
+            /// </summary>
+            /// <param name="message"></param>
+            /// <returns></returns>
+            private string? Query(string message)
             {
-                this.Name = channelName;
+                if (message.StartsWith($"{Name}:")) { message = $"{Name}:{message}"; }
+                return Device.Query(message);
+            }
+
+            public string? OutputState
+            {
+                get
+                {
+                    return Query("OUTPut?");
+                }
             }
         }
     }
