@@ -16,9 +16,12 @@ using HandyControl.Tools;
 using HandyControl.Data;
 using SiglentWaveformWizard.Communications;
 using SiglentWaveformWizard.Resources;
+using SiglentWaveformWizard.UI;
 
 namespace SiglentWaveformWizard
 {
+    public delegate void WaveformCanvasEvent(object sender);
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -59,16 +62,48 @@ namespace SiglentWaveformWizard
             waveformGen = null;
         }
 
-        private void PingButton_Click(object sender, RoutedEventArgs e)
+        private void SampleCountUpDown_ValueChanged(object sender, FunctionEventArgs<double> e)
         {
-            string? response = waveformGen?.IDN();
-            if (response != null) { MessageBox.Show(response); }
+            if (WavCanvas == null) { return; }
+            SampleCountSlider.ValueChanged -= SampleCountSlider_ValueChanged;
+            SampleCountSlider.Value = SampleCountUpDown.Value;
+            SampleCountSlider.ValueChanged += SampleCountSlider_ValueChanged;
+
+            WavCanvas.SampleCount = (int)SampleCountUpDown.Value;
         }
 
-        private void FuncButton_Click(object sender, RoutedEventArgs e)
+        private void SampleCountSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            string? response = waveformGen?.Channels[0].OutputState;
-            if (response != null) { Common.InfoPopup(response); }
+            if (WavCanvas == null) { return; }
+            SampleCountUpDown.ValueChanged -= SampleCountUpDown_ValueChanged;
+            SampleCountUpDown.Value = SampleCountSlider.Value;
+            SampleCountUpDown.ValueChanged += SampleCountUpDown_ValueChanged;
+
+            WavCanvas.SampleCount = (int)SampleCountSlider.Value;
+        }
+
+        private void WavCanvas_WaveformRedrawComplete(object sender)
+        {
+            TimeDivLabel.Content = $"Time / Div: {WavCanvas.HorizontalScale.ToEngineering()}s";
+        }
+
+        private void SampleRateUpDown_ValueChanged(object sender, FunctionEventArgs<double> e)
+        {
+            if (WavCanvas == null) { return; }
+            SampleRateSlider.ValueChanged -= SampleRateSlider_ValueChanged;
+            SampleRateSlider.Value = SampleRateUpDown.Value;
+            SampleRateSlider.ValueChanged += SampleRateSlider_ValueChanged;
+
+            WavCanvas.SampleRate = (int)SampleRateUpDown.Value;
+        }
+        private void SampleRateSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (WavCanvas == null) { return; }
+            SampleRateUpDown.ValueChanged -= SampleRateUpDown_ValueChanged;
+            SampleRateUpDown.Value = SampleRateSlider.Value;
+            SampleRateUpDown.ValueChanged += SampleRateUpDown_ValueChanged;
+
+            WavCanvas.SampleRate = (int)SampleRateSlider.Value;
         }
     }
 }

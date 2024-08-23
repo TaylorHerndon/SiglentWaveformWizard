@@ -4,10 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SiglentWaveformWizard"
+        xmlns:ui="clr-namespace:SiglentWaveformWizard.UI"
         xmlns:hc="https://handyorg.github.io/handycontrol"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
-        Background="#1C1C1C" FontFamily="Cascadia Code">
+        Title="Waveform Wizard" Height="450" Width="800"
+        Background="#1C1C1C" FontFamily="Cascadia Code" Icon="/Resources/Icons/Wizard_Transp_32x32.png">
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="4" LastChildFill="False">
             <ToggleButton Name="ConnectToggleButton"
@@ -38,7 +39,21 @@
                    HorizontalContentAlignment="Left"/>
         </DockPanel>
         <Separator DockPanel.Dock="Top"/>
-        <Button x:Name="PingButton" HorizontalAlignment="Left" Margin="8,4" Click="PingButton_Click" Content="Ping"/>
-        <Button x:Name="FuncButton" HorizontalAlignment="Left" Margin="8,4" Click="FuncButton_Click" Content="Func"/>
+        <DockPanel>
+            <StackPanel Margin="8" Width="120">
+                <Label Content="Sample Count" BorderThickness="0" HorizontalAlignment="Left"/>
+                <hc:NumericUpDown Name="SampleCountUpDown" Value="512" Minimum="2" Maximum="1024" ValueChanged="SampleCountUpDown_ValueChanged"/>
+                <Slider x:Name="SampleCountSlider" Value="512" Minimum="2" Maximum="1024" Margin="4" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="SampleCountSlider_ValueChanged"/>
+                <Separator Margin="0, 8"/>
+                <Label Content="Sample Rate" BorderThickness="0" HorizontalAlignment="Left"/>
+                <hc:NumericUpDown Name="SampleRateUpDown" Value="10000" Minimum="100" Maximum="50000" ValueChanged="SampleRateUpDown_ValueChanged"/>
+                <Slider x:Name="SampleRateSlider" Value="10000" Minimum="100" Maximum="50000" Margin="4" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="SampleRateSlider_ValueChanged"/>
+                <Separator Margin="0, 8"/>
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+                <Label Name="TimeDivLabel" Content="Time / Div: 1ms" Margin="8,0,0,8" Width="150" HorizontalContentAlignment="Left"></Label>
+            </StackPanel>
+            <ui:WaveformCanvas x:Name="WavCanvas" Margin="8" BorderBrush="#3f3f46" BorderThickness="1" WaveformRedrawComplete="WavCanvas_WaveformRedrawComplete"/>
+        </DockPanel>
     </DockPanel>
 </Window>
