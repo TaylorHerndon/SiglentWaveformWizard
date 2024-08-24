@@ -44,14 +44,28 @@
                 <Label Content="Sample Count" BorderThickness="0" HorizontalAlignment="Left"/>
                 <hc:NumericUpDown Name="SampleCountUpDown" Value="512" Minimum="2" Maximum="1024" ValueChanged="SampleCountUpDown_ValueChanged"/>
                 <Slider x:Name="SampleCountSlider" Value="512" Minimum="2" Maximum="1024" Margin="4" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="SampleCountSlider_ValueChanged"/>
-                <Separator Margin="0, 8"/>
-                <Label Content="Sample Rate" BorderThickness="0" HorizontalAlignment="Left"/>
-                <hc:NumericUpDown Name="SampleRateUpDown" Value="10000" Minimum="100" Maximum="50000" ValueChanged="SampleRateUpDown_ValueChanged"/>
-                <Slider x:Name="SampleRateSlider" Value="10000" Minimum="100" Maximum="50000" Margin="4" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="SampleRateSlider_ValueChanged"/>
-                <Separator Margin="0, 8"/>
+                <Separator Margin="0, 8, 0, 4"/>
+                <ToggleButton Name="VectorLineButton"
+                              Content="Vector Lines"
+                              HorizontalAlignment="Stretch"
+                              Margin="0, 4"
+                              Checked="VectorLineButton_Checked"
+                              Unchecked="VectorLineButton_Unchecked"/>
+                <ToggleButton Name="ConnectPointsToggleButton"
+                              Content="Connect Points"
+                              HorizontalAlignment="Stretch"
+                              Margin="0, 4"
+                              Checked="ConnectPointsToggleButton_Checked"
+                              Unchecked="ConnectPointsToggleButton_Unchecked"
+                              />
+                <Separator Margin="0, 4"/>
             </StackPanel>
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-                <Label Name="TimeDivLabel" Content="Time / Div: 1ms" Margin="8,0,0,8" Width="150" HorizontalContentAlignment="Left"></Label>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="8,0,8,8">
+                <hc:ComboBox Name="HorizontalScaleComboBox"
+                             Width="190"
+                             hc:TitleElement.Title="Time / Div"
+                             hc:TitleElement.TitlePlacement="Left"
+                             hc:TitleElement.TitleWidth="90"/>
             </StackPanel>
             <ui:WaveformCanvas x:Name="WavCanvas" Margin="8" BorderBrush="#3f3f46" BorderThickness="1" WaveformRedrawComplete="WavCanvas_WaveformRedrawComplete"/>
         </DockPanel>

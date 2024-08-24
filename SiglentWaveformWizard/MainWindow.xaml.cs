@@ -32,7 +32,12 @@ namespace SiglentWaveformWizard
         public MainWindow()
         {
             InitializeComponent();
+            foreach (double time in Common.standardDivisionTimes) { HorizontalScaleComboBox.Items.Add($"{time.ToEngineering()}s"); }
+            HorizontalScaleComboBox.SelectedItem = "1ms";
+            HorizontalScaleComboBox.SelectionChanged += HorizontalScaleComboBox_SelectionChanged;
         }
+
+        
 
         private void ConnectToggleButton_Checked(object sender, RoutedEventArgs e)
         {
@@ -84,26 +89,18 @@ namespace SiglentWaveformWizard
 
         private void WavCanvas_WaveformRedrawComplete(object sender)
         {
-            TimeDivLabel.Content = $"Time / Div: {WavCanvas.HorizontalScale.ToEngineering()}s";
+            //TimeDivLabel.Content = $"Time / Div: {WavCanvas.HorizontalScale.ToEngineering()}s";
         }
 
-        private void SampleRateUpDown_ValueChanged(object sender, FunctionEventArgs<double> e)
+        private void HorizontalScaleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (WavCanvas == null) { return; }
-            SampleRateSlider.ValueChanged -= SampleRateSlider_ValueChanged;
-            SampleRateSlider.Value = SampleRateUpDown.Value;
-            SampleRateSlider.ValueChanged += SampleRateSlider_ValueChanged;
-
-            WavCanvas.SampleRate = (int)SampleRateUpDown.Value;
+            WavCanvas.HorizontalScale = Common.standardDivisionTimes[HorizontalScaleComboBox.SelectedIndex];
         }
-        private void SampleRateSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (WavCanvas == null) { return; }
-            SampleRateUpDown.ValueChanged -= SampleRateUpDown_ValueChanged;
-            SampleRateUpDown.Value = SampleRateSlider.Value;
-            SampleRateUpDown.ValueChanged += SampleRateUpDown_ValueChanged;
 
-            WavCanvas.SampleRate = (int)SampleRateSlider.Value;
-        }
+        private void VectorLineButton_Checked(object sender, RoutedEventArgs e) => WavCanvas.VectorLines = true;
+        private void VectorLineButton_Unchecked(object sender, RoutedEventArgs e) => WavCanvas.VectorLines = false;
+        private void ConnectPointsToggleButton_Checked(object sender, RoutedEventArgs e) => WavCanvas.ConnectPoints = true;
+        private void ConnectPointsToggleButton_Unchecked(object sender, RoutedEventArgs e) => WavCanvas.ConnectPoints = false;
     }
 }

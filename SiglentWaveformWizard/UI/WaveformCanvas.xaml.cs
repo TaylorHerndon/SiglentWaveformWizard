@@ -25,19 +25,22 @@ namespace SiglentWaveformWizard.UI
     public partial class WaveformCanvas : UserControl
     {
         public event WaveformCanvasEvent? WaveformRedrawComplete;
-
-        private List<double> standardDivisionTimes = new List<double>();
         public WaveformCanvas()
         {
-            for (int i = 0; i < 6; i++)
-            {
-                standardDivisionTimes.Add(5 / Math.Pow(10, i));
-                standardDivisionTimes.Add(2 / Math.Pow(10, i));
-                standardDivisionTimes.Add(1 / Math.Pow(10, i));
-            }
-
             InitializeComponent();
             GenerateSinWave();
+        }
+
+        private int sampleRate = 10000;
+        public int SampleRate
+        {
+            get => sampleRate;
+            set
+            {
+                sampleRate = value;
+                GenerateSinWave();
+                DrawWaveform();
+            }
         }
 
         private int sampleCount = 256;
@@ -47,37 +50,55 @@ namespace SiglentWaveformWizard.UI
             set 
             { 
                 sampleCount = value;
-                int[] newDataPoints = new int[sampleCount];
 
+                //If you change the number of samples then sample rate will need to change to fit the waveform to the screen.
+                sampleRate = (int)(sampleCount  / (HorizontalScale * 10));
+
+                double[] newDataPoints = new double[sampleCount];
                 for (int i = 0; i < sampleCount; i++)
                 {
                     if (DataPoints.Length > i) { newDataPoints[i] = DataPoints[i]; }
                     else { newDataPoints[i] = 0; }
                 }
-
+                GenerateSinWave();
                 DrawWaveform();
             } 
         }
 
-        private int sampleRate = 10000;
-        /// <summary>
-        /// Sample rate of waveform in Hz
-        /// </summary>
-        public int SampleRate
-        {
-            get => sampleRate;
-            set
+        private double horizontalScale = 0.001;
+        public double HorizontalScale 
+        { 
+            get => horizontalScale;
+            set 
             {
-                sampleRate = value;
+                if (!Common.standardDivisionTimes.Contains(value)) { return; }
+                horizontalScale = value;
+
+                //Change the sample rate to fit the new window size.
+                sampleRate = (int)(sampleCount / (HorizontalScale * 10));
+                GenerateSinWave();
                 DrawWaveform();
             }
         }
 
-        public int[] DataPoints;
 
-        public double HorizontalScale { get; private set; } = 0.001;
+        public double[] DataPoints;
         public double HorizontalDivisions { get; set; } = 10;
         public double VerticalDivisions { get; set; } = 3;
+
+        private bool vectorLines = false;
+        public bool VectorLines 
+        { 
+            get => vectorLines;
+            set { vectorLines = value; DrawWaveform(); } 
+        }
+
+        private bool connectPoints = false;
+        public bool ConnectPoints
+        {
+            get => connectPoints;
+            set { connectPoints = value; DrawWaveform(); }
+        }
 
         private void DrawLine(double x1, double y1, double x2, double y2, Color c, double thickness)
         {
@@ -158,10 +179,10 @@ namespace SiglentWaveformWizard.UI
             double divisionWidth = CanvasControl.ActualWidth / HorizontalDivisions;
             double divisionHeight = CanvasControl.ActualHeight / (VerticalDivisions * 2);
 
-            DrawLine(0, verticalCenter, CanvasControl.ActualWidth, verticalCenter, Colors.LightGray, 3);
+            DrawLine(0, verticalCenter, CanvasControl.ActualWidth, verticalCenter, Colors.LightGray, 1);
             for (int i = 0; i < HorizontalDivisions + 1; i++)
             {
-                DrawLine(divisionWidth * i, verticalCenter - 10, divisionWidth * i, verticalCenter + 10, Colors.LightGray, 2);
+                DrawLine(divisionWidth * i, verticalCenter - 10, divisionWidth * i, verticalCenter + 10, Colors.LightGray, 1);
                 if (i != 0 && i != 10) { DrawDashedLine(divisionWidth * i, 0, divisionWidth * i, CanvasControl.ActualHeight, Color.FromArgb(0xFF, 0x30, 0x30, 0x30), 2); }
             }
 
@@ -175,69 +196,59 @@ namespace SiglentWaveformWizard.UI
         public void DrawDataPoints()
         {
             double verticalCenter = CanvasControl.ActualHeight / 2;
-
-            //double samplePeriod = 1 / (double)sampleRate;
-            //double timePerPixel = (HorizontalScale * 10) / CanvasControl.ActualWidth;
-            //double pixelsPerSample = samplePeriod / timePerPixel;
-
-            //double pixelsPerSample = (double)sampleRate * ((HorizontalScale * 10) / CanvasControl.ActualWidth);
-
             double pixelsPerSample = CanvasControl.ActualWidth / (SampleRate * HorizontalScale * 10);
-
-            //double a = (HorizontalScale * 10);
-            //double b = ((double)sampleRate * (double)CanvasControl.ActualWidth);
-            //double pixelsPerSample = a / b;
 
             for (int i = 0; i < DataPoints.Length; i++)
             {
-                if (i * pixelsPerSample > CanvasControl.ActualWidth) { break; } 
-                DrawCircle(i * pixelsPerSample, verticalCenter - DataPoints[i], 1, Colors.Green, 1);
+                if (i * pixelsPerSample > CanvasControl.ActualWidth) { break; }
+
+                double x = i * pixelsPerSample;
+                double y = verticalCenter - DataPoints[i];
+
+                DrawCircle(x - 2, y - 2, 2, Colors.Green, 1, Colors.Green);
+                if (vectorLines) { DrawLine(x, y, x, verticalCenter, Colors.Green, 1); }
+                if (connectPoints && i != 0) { DrawLine((i - 1) * pixelsPerSample, verticalCenter - DataPoints[i - 1], x, y, Colors.Green, 1);  }
             }
         }
 
         public void GenerateSinWave()
         {
-            DataPoints = new int[SampleCount];
+            DataPoints = new double[SampleCount];
 
-            double period = 0.002;
+            //double period = 0.002;
+            double period = HorizontalScale * 4;
             double voltage = 100;
 
             double samplePeriod = 1 / (double)sampleRate;
-            double samplesPerCycle = (int)(period / samplePeriod);
+            double samplesPerCycle = (period / samplePeriod);
 
             for (int i = 0; i < DataPoints.Length; i++) 
             {
-                DataPoints[i] = (int)(Math.Sin(((i % samplesPerCycle) / (double)samplesPerCycle) * 2 * Math.PI) * voltage); 
+                //DataPoints[i] = (int)(Math.Sin(((i % samplesPerCycle) / (double)samplesPerCycle) * 2 * Math.PI) * voltage); 
+                DataPoints[i] = (Math.Sin((i / samplesPerCycle) * 2 * Math.PI) * voltage);
             }
-
-            //Common.InfoPopup(string.Join('\n', DataPoints));
         }
 
         private void DrawWaveform()
         {
             if (CanvasControl == null) { return; }
             CanvasControl.Children.Clear();
-            GenerateSinWave();
 
             DrawGrid();
             DrawDataPoints();
-
-            //double totalWaveformTime = ((double)sampleCount / (double)sampleRate);
-            //double idealDivisionTime = totalWaveformTime / 10f;
-            //double standardDivisionTime = standardDivisionTimes.FirstOrDefault(div => idealDivisionTime >= div, 0.001);
-            //double samplesBetweenDivisions = standardDivisionTime * sampleRate;
-            //HorizontalScale = standardDivisionTime;
-
-            //DrawLine(0, verticalCenter, SampleCount, verticalCenter, Colors.LightGray, 3);
-            //for (int i = 0; i < Math.Floor(totalWaveformTime / standardDivisionTime); i++) 
-            //{ DrawLine(samplesBetweenDivisions * i, verticalCenter + 10, samplesBetweenDivisions * i, verticalCenter - 10, Colors.LightGray, 2); }
 
             WaveformRedrawComplete?.Invoke(this);
         }
 
         private void CanvasControl_MouseMove(object sender, MouseEventArgs e)
         {
-
+            if (e.MouseDevice.LeftButton != MouseButtonState.Pressed) { return; }
+            Point mousePos = e.GetPosition(CanvasControl);
+            double percentOfXAxis = mousePos.X / CanvasControl.ActualWidth;
+            int corespondingIndex = Math.Min((int)Math.Round(percentOfXAxis * DataPoints.Length), DataPoints.Length - 1);
+            double verticalCenter = CanvasControl.ActualHeight / 2;
+            DataPoints[corespondingIndex] = verticalCenter - mousePos.Y;
+            DrawWaveform();
         }
 
         private void CanvasControl_SizeChanged(object sender, SizeChangedEventArgs e)
