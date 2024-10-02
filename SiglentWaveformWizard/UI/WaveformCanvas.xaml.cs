@@ -81,6 +81,29 @@ namespace SiglentWaveformWizard.UI
             }
         }
 
+        private double verticalScale = 1.0;
+        public double VerticalScale
+        {
+            get => verticalScale;
+            set
+            {
+                if (!Common.standardDivisionVoltages.Contains(value)) { return; }
+
+                double currentVoltsPerPixel = (CanvasControl.ActualHeight / (VerticalDivisions * 2)) / verticalScale;
+                double newVoltsPerPixel = (CanvasControl.ActualHeight / (VerticalDivisions * 2)) / value;
+                double voltPerPixelConversion = newVoltsPerPixel / currentVoltsPerPixel;
+                verticalScale = value;
+
+                double[] newDataPoints = new double[DataPoints.Length];
+                for (int i = 0; i < newDataPoints.Length; i++)
+                {
+                    newDataPoints[i] = DataPoints[i] * voltPerPixelConversion;
+                }
+
+                DataPoints = newDataPoints;
+                DrawWaveform();
+            }
+        }
 
         public double[] DataPoints;
         public double HorizontalDivisions { get; set; } = 10;
@@ -102,10 +125,10 @@ namespace SiglentWaveformWizard.UI
 
         private void DrawLine(double x1, double y1, double x2, double y2, Color c, double thickness)
         {
-            Math.Min(Math.Max(x1, 0), CanvasControl.ActualWidth);
-            Math.Min(Math.Max(x2, 0), CanvasControl.ActualWidth);
-            Math.Min(Math.Max(y1, 0), CanvasControl.ActualHeight);
-            Math.Min(Math.Max(y2, 0), CanvasControl.ActualHeight);
+            x1 = Math.Min(Math.Max(x1, 0), CanvasControl.ActualWidth);
+            x2 = Math.Min(Math.Max(x2, 0), CanvasControl.ActualWidth);
+            y1 = Math.Min(Math.Max(y1, -2), CanvasControl.ActualHeight - 2);
+            y2 = Math.Min(Math.Max(y2, -2), CanvasControl.ActualHeight - 2);
 
             Line l = new Line();    
             l.Visibility = Visibility.Visible;
@@ -120,10 +143,10 @@ namespace SiglentWaveformWizard.UI
 
         private void DrawDashedLine(double x1, double y1, double x2, double y2, Color c, double thickness)
         {
-            Math.Min(Math.Max(x1, 0), CanvasControl.ActualWidth);
-            Math.Min(Math.Max(x2, 0), CanvasControl.ActualWidth);
-            Math.Min(Math.Max(y1, 0), CanvasControl.ActualHeight);
-            Math.Min(Math.Max(y2, 0), CanvasControl.ActualHeight);
+            x1 = Math.Min(Math.Max(x1, 0), CanvasControl.ActualWidth);
+            x2 = Math.Min(Math.Max(x2, 0), CanvasControl.ActualWidth);
+            y1 = Math.Min(Math.Max(y1, -2), CanvasControl.ActualHeight - 2);
+            y2 = Math.Min(Math.Max(y2, -2), CanvasControl.ActualHeight - 2);
 
             Line l = new Line();
             l.Visibility = Visibility.Visible;
@@ -139,10 +162,10 @@ namespace SiglentWaveformWizard.UI
 
         private void DrawRectangle(double x1, double y1, double x2, double y2, Color borderColor, double borderThickness, Color? fillColor = null)
         {
-            Math.Min(Math.Max(x1, 0), CanvasControl.ActualWidth);
-            Math.Min(Math.Max(x2, 0), CanvasControl.ActualWidth);
-            Math.Min(Math.Max(y1, 0), CanvasControl.ActualHeight);
-            Math.Min(Math.Max(y2, 0), CanvasControl.ActualHeight);
+            x1 = Math.Min(Math.Max(x1, 0), CanvasControl.ActualWidth);
+            x2 = Math.Min(Math.Max(x2, 0), CanvasControl.ActualWidth);
+            y1 = Math.Min(Math.Max(y1, -2), CanvasControl.ActualHeight - 2);
+            y2 = Math.Min(Math.Max(y2, -2), CanvasControl.ActualHeight - 2);
 
             Rectangle r = new Rectangle();
             r.Visibility = Visibility.Visible;
@@ -158,8 +181,8 @@ namespace SiglentWaveformWizard.UI
 
         private void DrawCircle(double x, double y, double r, Color borderColor, double borderThickness, Color? fillColor = null)
         {
-            Math.Min(Math.Max(x, 0), CanvasControl.ActualWidth);
-            Math.Min(Math.Max(y, 0), CanvasControl.ActualHeight);
+            x = Math.Min(Math.Max(x, 0), CanvasControl.ActualWidth);
+            y = Math.Min(Math.Max(y, -2), CanvasControl.ActualHeight - 2);
 
             Ellipse e = new Ellipse();
             e.Visibility = Visibility.Visible;

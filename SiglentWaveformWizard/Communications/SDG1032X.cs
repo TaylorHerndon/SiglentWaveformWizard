@@ -1,4 +1,4 @@
-﻿//Ignore Spelling: Siglent, SDG, IDN
+﻿//Ignore Spelling: Siglent, SDG, IDN OPC
 
 using System;
 using System.Collections.Generic;
@@ -14,6 +14,7 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
 using SiglentWaveformWizard.Resources;
+using SiglentWaveformWizard.Communications.Supporting;
 
 namespace SiglentWaveformWizard.Communications
 {
@@ -44,10 +45,19 @@ namespace SiglentWaveformWizard.Communications
                 new OutputChannel("C1", device),
                 new OutputChannel("C2", device)
             };
+
+            device.Reset();
         }
 
         public string? IDN() => device.IDN();
-        public string? WaitUntilOperationComplete() => device.WaitUntilOperationComplete();
+        public string? OPC() => device.OPC();
+        public void Reset()
+        {
+            device.Reset();
+            device.OPC();
+            Channels[1].IsEnabled = false;
+            Channels[0].IsEnabled = false;
+        }
 
         public void Close() => device?.Dispose();
         public void Dispose() => device?.Dispose();
@@ -74,11 +84,48 @@ namespace SiglentWaveformWizard.Communications
                 return Device.Query(message);
             }
 
-            public string? OutputState
+            public OutputState OutputState
             {
                 get
                 {
-                    return Query("OUTPut?");
+                    string? resp = Device.Query("OUTPut?");
+                    return resp == null ? throw new Exception("Output status could not be queried.") : new OutputState(resp);
+                }
+                set
+                {
+                    Load = value.Load;
+                    Inverted = value.Inverted;
+                    IsEnabled = value.IsEnabled;
+                }
+            }
+
+            public bool IsEnabled
+            {
+                get => OutputState.IsEnabled;
+                set 
+                { 
+                    Device.Write($"{Name}:OUTP {(value ? "ON" : "OFF")}");
+                    Device.OPC();
+                }
+            }
+
+            public bool Inverted
+            { 
+                get => OutputState.Inverted;
+                set 
+                {
+                    Device.Write($"{Name}:OUTP PLRT,{(value ? "INVT" : "NOR")}");
+                    Device.OPC();
+                }
+            }
+
+            public OutputImpedances Load
+            {
+                get => OutputState.Load;
+                set 
+                { 
+                    Device.Write($"{Name}:OUTP LOAD,{(value == OutputImpedances.HighZ ? "HZ" : "50")}");
+                    Device.OPC();
                 }
             }
         }

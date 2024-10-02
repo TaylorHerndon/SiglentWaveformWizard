@@ -17,6 +17,8 @@ using HandyControl.Data;
 using SiglentWaveformWizard.Communications;
 using SiglentWaveformWizard.Resources;
 using SiglentWaveformWizard.UI;
+using System.Diagnostics.Eventing.Reader;
+using SiglentWaveformWizard.Communications.Supporting;
 
 namespace SiglentWaveformWizard
 {
@@ -33,25 +35,31 @@ namespace SiglentWaveformWizard
         {
             InitializeComponent();
             foreach (double time in Common.standardDivisionTimes) { HorizontalScaleComboBox.Items.Add($"{time.ToEngineering()}s"); }
-            HorizontalScaleComboBox.SelectedItem = "1ms";
-            HorizontalScaleComboBox.SelectionChanged += HorizontalScaleComboBox_SelectionChanged;
-        }
+            foreach (double voltage in Common.standardDivisionVoltages) { VerticalScaleComboBox.Items.Add($"{voltage.ToEngineering()}V"); }
 
-        
+            HorizontalScaleComboBox.SelectedItem = "1ms";
+            VerticalScaleComboBox.SelectedItem = "1V";
+            HorizontalScaleComboBox.SelectionChanged += HorizontalScaleComboBox_SelectionChanged;
+            VerticalScaleComboBox.SelectionChanged += VerticalScaleComboBox_SelectionChanged;
+
+            WavCanvas.SampleCount = 128;
+        }
 
         private void ConnectToggleButton_Checked(object sender, RoutedEventArgs e)
         {
             try 
             { 
                 waveformGen = new SDG1032X(IPTextBox.Text, (int)PortTextBox.Value);
-                ConnectToggleButton.Background = new SolidColorBrush(Colors.DarkGreen);
+                ConnectToggleButton.BorderBrush = new SolidColorBrush(Colors.DarkGreen);
 
                 DeviceLabel.Content = waveformGen.ModelNumber;
                 SerialNumberLabel.Content = waveformGen.SerialNumber;
+                StartButton.IsEnabled = true;
             }
             catch (Exception ex)
             { 
                 HandyControl.Controls.Growl.ErrorGlobal($"Error occurred: {ex.Message}");
+                StartButton.IsEnabled = false;
                 ConnectToggleButton.IsChecked = false; //Will also dispose of the device.
             }
             
@@ -61,7 +69,7 @@ namespace SiglentWaveformWizard
         {
             DeviceLabel.Content = "";
             SerialNumberLabel.Content = "";
-            ConnectToggleButton.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1C));
+            ConnectToggleButton.BorderBrush = new SolidColorBrush(Colors.DarkRed);
 
             waveformGen?.Close();
             waveformGen = null;
@@ -98,9 +106,45 @@ namespace SiglentWaveformWizard
             WavCanvas.HorizontalScale = Common.standardDivisionTimes[HorizontalScaleComboBox.SelectedIndex];
         }
 
+        private void VerticalScaleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (WavCanvas == null) { return; }
+            WavCanvas.VerticalScale = Common.standardDivisionVoltages[VerticalScaleComboBox.SelectedIndex];
+        }
+
         private void VectorLineButton_Checked(object sender, RoutedEventArgs e) => WavCanvas.VectorLines = true;
         private void VectorLineButton_Unchecked(object sender, RoutedEventArgs e) => WavCanvas.VectorLines = false;
         private void ConnectPointsToggleButton_Checked(object sender, RoutedEventArgs e) => WavCanvas.ConnectPoints = true;
         private void ConnectPointsToggleButton_Unchecked(object sender, RoutedEventArgs e) => WavCanvas.ConnectPoints = false;
+
+        private void StartButton_Checked(object sender, RoutedEventArgs e)
+        {
+            if (waveformGen == null) { return; }
+
+            StartButton.Content = "Running";
+            StartButton.BorderBrush = new SolidColorBrush(Colors.DarkGreen);
+
+            waveformGen.Reset();
+            OutputState? state = waveformGen.Channels[0].OutputState;
+            if (state == null) { return; }
+
+            OutputState newState = new OutputState();
+            newState.Channel = "C1";
+            newState.Load = OutputImpedances.FiftyOhm;
+            newState.Inverted = true;
+            newState.IsEnabled = true;
+
+            waveformGen.Channels[0].OutputState = newState;
+            state = waveformGen.Channels[0].OutputState;
+            if (state == null) { return; }
+        }
+
+        private void StartButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (waveformGen == null) { return; }
+
+            StartButton.Content = "Stopped";
+            StartButton.BorderBrush = new SolidColorBrush(Colors.DarkRed);
+        }
     }
 }

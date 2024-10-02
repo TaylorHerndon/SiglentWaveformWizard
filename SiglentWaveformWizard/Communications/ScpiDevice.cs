@@ -30,7 +30,7 @@ namespace SiglentWaveformWizard.Communications
             }
 
             Reset();
-            WaitUntilOperationComplete();
+            OPC();
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace SiglentWaveformWizard.Communications
             }
 
             if (respMessage == string.Empty) { return null; }
-            return respMessage;
+            return respMessage.Trim();
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace SiglentWaveformWizard.Communications
 
         public string? IDN() => Query("*IDN?");
         public void Reset() => Write("*RST");
-        public string? WaitUntilOperationComplete() => Query("*OPC?");
+        public string? OPC() => Query("*OPC?");
 
         public void Close() => Dispose();
         public void Dispose()

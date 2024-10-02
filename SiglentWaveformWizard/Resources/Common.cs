@@ -36,5 +36,11 @@ namespace SiglentWaveformWizard.Resources
             0.0005, 0.0002, 0.0001,
             0.00005, 0.00002, 0.00001,
         };
+
+        public static List<double> standardDivisionVoltages = new List<double>()
+        {
+            5, 2, 1,
+            0.5, 0.2, 0.1
+        };
     }
 }
