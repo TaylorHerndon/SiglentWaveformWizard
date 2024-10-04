@@ -124,25 +124,25 @@ namespace SiglentWaveformWizard
             StartButton.Content = "Running";
             StartButton.BorderBrush = new SolidColorBrush(Colors.DarkGreen);
 
+            //Interpret data points of graph to voltage values to scaled 16bit values.
+            double pixelsPerDiv = WavCanvas.ActualHeight / (WavCanvas.VerticalDivisions * 2);
+            double verticalRatio = WavCanvas.VerticalScale / pixelsPerDiv;
+
+            double[] dataPointsVolts = WavCanvas.DataPoints.Select(v => v * verticalRatio).ToArray();
+            double maxVoltage = Math.Max(dataPointsVolts.Max(), Math.Abs(dataPointsVolts.Min()));
+
+            short[] scaledPoints = dataPointsVolts.Select(v => (short)((v / maxVoltage) * 32767)).ToArray();
+
             waveformGen.Reset();
-            OutputState? state = waveformGen.Channels[0].OutputState;
-            if (state == null) { return; }
-
-            OutputState newState = new OutputState();
-            newState.Channel = "C1";
-            newState.Load = OutputImpedances.FiftyOhm;
-            newState.Inverted = true;
-            newState.IsEnabled = true;
-
-            waveformGen.Channels[0].OutputState = newState;
-            state = waveformGen.Channels[0].OutputState;
-            if (state == null) { return; }
+            waveformGen.Channels[0].Waveform = new ArbitraryWaveform("C1", 1000, (float)maxVoltage, scaledPoints);
+            waveformGen.Channels[0].IsEnabled = true;
         }
 
         private void StartButton_Unchecked(object sender, RoutedEventArgs e)
         {
             if (waveformGen == null) { return; }
 
+            waveformGen.Channels[0].IsEnabled = false;
             StartButton.Content = "Stopped";
             StartButton.BorderBrush = new SolidColorBrush(Colors.DarkRed);
         }

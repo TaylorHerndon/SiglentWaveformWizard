@@ -49,6 +49,25 @@ namespace SiglentWaveformWizard.Communications
         }
 
         /// <summary>
+        /// Writes the given message to the device.
+        /// Will terminate the message with a '\n' if it is not already.
+        /// </summary>
+        /// <param name="message">Message to be sent to the device.</param>
+        public void Write(byte[] message)
+        {
+            if (client == null) { return; }
+            if (message[message.Length - 1] != 0x10) 
+            {
+                List<byte> tempList = message.ToList();
+                tempList.Add(0x10);
+                message = tempList.ToArray();
+            }
+
+            NetworkStream stream = client.GetStream();
+            stream.Write(message, 0, message.Length);
+        }
+
+        /// <summary>
         /// Will read until a '\n' character is received from the device or until timeout is reached.
         /// </summary>
         /// <returns>Data read from the device or null if nothing was read.</returns>

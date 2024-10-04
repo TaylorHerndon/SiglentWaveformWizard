@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Buffers.Binary;
 
 namespace SiglentWaveformWizard.Resources
 {
@@ -42,5 +43,7 @@ namespace SiglentWaveformWizard.Resources
             5, 2, 1,
             0.5, 0.2, 0.1
         };
+
+        public static short ReverseEddiann(this short value) => (short)BinaryPrimitives.ReverseEndianness(value);
     }
 }

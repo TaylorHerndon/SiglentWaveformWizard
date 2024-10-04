@@ -15,6 +15,7 @@ using System.Runtime.CompilerServices;
 using System.ComponentModel;
 using SiglentWaveformWizard.Resources;
 using SiglentWaveformWizard.Communications.Supporting;
+using System.Xml.Serialization;
 
 namespace SiglentWaveformWizard.Communications
 {
@@ -125,6 +126,33 @@ namespace SiglentWaveformWizard.Communications
                 set 
                 { 
                     Device.Write($"{Name}:OUTP LOAD,{(value == OutputImpedances.HighZ ? "HZ" : "50")}");
+                    Device.OPC();
+                }
+            }
+
+            public ArbitraryWaveform Waveform
+            {
+                //get
+                //{
+                //    List<string> availableWaveforms = (Device.Query("STL? USER") ?? "").Split(',').Select(s => s.Trim()).ToList();
+
+                //    //Waveform USER1 does not exist yet so create it.
+                //    short[] dataPoints = new short[] { 0x1000, 0x2000, 0x3000, 0x4000, 0x5000, 0x6000, 0x7000, 0x7fff };
+                //    ArbitraryWaveform genericWaveform = new ArbitraryWaveform(Name, 1000, 1, dataPoints);
+
+                //    Device.Write(genericWaveform.SetMessage);
+                //    Device.OPC();
+
+                //    Device.Write($"{Name}:ARWV NAME,USER1");
+                //    Device.OPC();
+
+                //    return genericWaveform;
+                //}
+                set
+                {
+                    Device.Write(value.SetMessage);
+                    Device.OPC();
+                    Device.Write($"{Name}:ARWV NAME,USER1");
                     Device.OPC();
                 }
             }
