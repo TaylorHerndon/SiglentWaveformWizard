@@ -123,6 +123,8 @@ namespace SiglentWaveformWizard.UI
             set { connectPoints = value; DrawWaveform(); }
         }
 
+        public bool WaveformChanged { get; set; }
+
         private void DrawLine(double x1, double y1, double x2, double y2, Color c, double thickness)
         {
             x1 = Math.Min(Math.Max(x1, 0), CanvasControl.ActualWidth);
@@ -239,7 +241,7 @@ namespace SiglentWaveformWizard.UI
             DataPoints = new double[SampleCount];
 
             //double period = 0.002;
-            double period = HorizontalScale * 4;
+            double period = HorizontalScale * 5;
             double voltage = 100;
 
             double samplePeriod = 1 / (double)sampleRate;
@@ -250,6 +252,8 @@ namespace SiglentWaveformWizard.UI
                 //DataPoints[i] = (int)(Math.Sin(((i % samplesPerCycle) / (double)samplesPerCycle) * 2 * Math.PI) * voltage); 
                 DataPoints[i] = (Math.Sin((i / samplesPerCycle) * 2 * Math.PI) * voltage);
             }
+
+            WaveformChanged = true;
         }
 
         private void DrawWaveform()
@@ -272,6 +276,7 @@ namespace SiglentWaveformWizard.UI
             double verticalCenter = CanvasControl.ActualHeight / 2;
             DataPoints[corespondingIndex] = verticalCenter - mousePos.Y;
             DrawWaveform();
+            WaveformChanged = true;
         }
 
         private void CanvasControl_SizeChanged(object sender, SizeChangedEventArgs e)

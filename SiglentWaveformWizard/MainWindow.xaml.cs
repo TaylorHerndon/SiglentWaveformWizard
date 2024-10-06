@@ -17,8 +17,8 @@ using HandyControl.Data;
 using SiglentWaveformWizard.Communications;
 using SiglentWaveformWizard.Resources;
 using SiglentWaveformWizard.UI;
-using System.Diagnostics.Eventing.Reader;
 using SiglentWaveformWizard.Communications.Supporting;
+using System.Windows.Threading;
 
 namespace SiglentWaveformWizard
 {
@@ -30,6 +30,7 @@ namespace SiglentWaveformWizard
     public partial class MainWindow : Window
     {
         SDG1032X? waveformGen;
+        DispatcherTimer exportTimer = new DispatcherTimer();
 
         public MainWindow()
         {
@@ -43,7 +44,11 @@ namespace SiglentWaveformWizard
             VerticalScaleComboBox.SelectionChanged += VerticalScaleComboBox_SelectionChanged;
 
             WavCanvas.SampleCount = 128;
-        }
+
+            exportTimer.Interval = new TimeSpan(0, 0, 0, 1);
+            exportTimer.Tick += ExportTimer_Tick;
+            exportTimer.Start();
+        }    
 
         private void ConnectToggleButton_Checked(object sender, RoutedEventArgs e)
         {
@@ -117,12 +122,13 @@ namespace SiglentWaveformWizard
         private void ConnectPointsToggleButton_Checked(object sender, RoutedEventArgs e) => WavCanvas.ConnectPoints = true;
         private void ConnectPointsToggleButton_Unchecked(object sender, RoutedEventArgs e) => WavCanvas.ConnectPoints = false;
 
-        private void StartButton_Checked(object sender, RoutedEventArgs e)
+        private void ExportTimer_Tick(object? sender, EventArgs e) 
         {
-            if (waveformGen == null) { return; }
-
-            StartButton.Content = "Running";
-            StartButton.BorderBrush = new SolidColorBrush(Colors.DarkGreen);
+            if (WavCanvas.WaveformChanged && !(WavCanvas.IsMouseOver && Mouse.LeftButton == MouseButtonState.Pressed)) { ExportWavformToGenerator(); }
+        }
+        private void ExportWavformToGenerator()
+        {
+            if (waveformGen == null || StartButton.IsChecked == false) { return; }
 
             //Interpret data points of graph to voltage values to scaled 16bit values.
             double pixelsPerDiv = WavCanvas.ActualHeight / (WavCanvas.VerticalDivisions * 2);
@@ -133,18 +139,31 @@ namespace SiglentWaveformWizard
 
             short[] scaledPoints = dataPointsVolts.Select(v => (short)((v / maxVoltage) * 32767)).ToArray();
 
-            waveformGen.Reset();
-            waveformGen.Channels[0].Waveform = new ArbitraryWaveform("C1", 1000, (float)maxVoltage, scaledPoints);
+            waveformGen.Channels[0].Waveform = new ArbitraryWaveform("C1", WavCanvas.SampleRate / WavCanvas.SampleCount, (float)maxVoltage, scaledPoints);
             waveformGen.Channels[0].IsEnabled = true;
+
+            waveformGen.Channels[1].ConfigAsSyncGen(WavCanvas.SampleRate / WavCanvas.SampleCount);
+            waveformGen.Channels[1].IsEnabled = true;
+
+            WavCanvas.WaveformChanged = false;
+        }
+
+        private void StartButton_Checked(object sender, RoutedEventArgs e)
+        {
+            if (waveformGen == null) { return; }
+
+            StartButton.Content = "Running";
+            StartButton.BorderBrush = new SolidColorBrush(Colors.DarkGreen);
+            ExportWavformToGenerator();
         }
 
         private void StartButton_Unchecked(object sender, RoutedEventArgs e)
         {
             if (waveformGen == null) { return; }
 
-            waveformGen.Channels[0].IsEnabled = false;
             StartButton.Content = "Stopped";
             StartButton.BorderBrush = new SolidColorBrush(Colors.DarkRed);
+            waveformGen.Channels.ForEach(ch => ch.IsEnabled = false);
         }
     }
 }
